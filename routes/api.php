@@ -6,7 +6,20 @@ use App\Http\Controllers\DonorController;
 use App\Http\Controllers\DonorResponseController;
 use App\Http\Controllers\HospitalController;
 use App\Http\Controllers\MatchingController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// ── Endpoint de diagnostic temporaire (à supprimer après fix) ────────────────
+Route::post('/debug-input', function (Request $request) {
+    return response()->json([
+        'all'          => $request->all(),
+        'raw_content'  => $request->getContent(),
+        'content_type' => $request->header('Content-Type'),
+        'accept'       => $request->header('Accept'),
+        'method'       => $request->method(),
+        'php_input'    => file_get_contents('php://input'),
+    ]);
+});
 
 /*
 |--------------------------------------------------------------------------
