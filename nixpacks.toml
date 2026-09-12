@@ -1,0 +1,12 @@
+[variables]
+PHP_EXTENSIONS = "pdo pdo_pgsql pgsql mbstring openssl tokenizer xml ctype json bcmath"
+
+[phases.build]
+cmds = [
+  "composer install --no-dev --optimize-autoloader",
+  "php artisan config:cache",
+  "php artisan route:cache"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
