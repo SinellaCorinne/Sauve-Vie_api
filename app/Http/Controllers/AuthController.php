@@ -19,6 +19,11 @@ class AuthController extends Controller
      */
     public function registerDonor(RegisterDonorRequest $request): JsonResponse
     {
+        \Log::info('RegisterDonor request payload', [
+            'body' => $request->all(),
+            'headers' => $request->headers->all(),
+        ]);
+
         $user = User::create([
             'name'               => $request->name,
             'email'              => $request->email,
@@ -46,6 +51,11 @@ class AuthController extends Controller
      */
     public function registerHospital(RegisterHospitalRequest $request): JsonResponse
     {
+        \Log::info('RegisterHospital request payload', [
+            'body' => $request->all(),
+            'headers' => $request->headers->all(),
+        ]);
+
         $user = User::create([
             'name'     => $request->name,
             'email'    => $request->email,
@@ -78,12 +88,20 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
+        \Log::info('AuthController@login payload', [
+            'body' => $request->all(),
+            'headers' => $request->headers->all(),
+        ]);
+
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($request->only('email', 'password'))) {
+            \Log::warning('AuthController@login failed: invalid credentials', [
+                'email' => $request->email,
+            ]);
             throw ValidationException::withMessages([
                 'email' => ['Identifiants incorrects.'],
             ]);
@@ -116,6 +134,11 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
+        \Log::info('AuthController@logout', [
+            'user_id' => $request->user()?->id,
+            'token_present' => (bool) $request->bearerToken(),
+        ]);
+
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Déconnexion réussie.']);
@@ -127,6 +150,11 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
+        \Log::info('AuthController@me', [
+            'user_id' => $request->user()?->id,
+            'has_token' => (bool) $request->bearerToken(),
+        ]);
+
         $user = $request->user();
 
         if ($user->isHospital()) {
