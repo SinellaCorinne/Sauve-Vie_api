@@ -87,16 +87,15 @@ class MatchingController extends Controller
         // On cherche les demandes dont le groupe recherché accepte le groupe du donneur.
         $donorType = $user->blood_type;
 
-        // On cherche toutes les demandes ouvertes dont le groupe requiert ce donneur
+        $compatibleReceiverTypes = $this->getCompatibleReceiverTypes($donorType);
+
+        // On cherche les demandes ouvertes dont le groupe recherché accepte le groupe du donneur.
+        // L'utilisation d'un sous-select PostgreSQL/ARRAY ici est fragile et peut retourner un
+        // résultat vide selon l'environnement de production. On préfère un filtre portable avec
+        // une liste explicite de valeurs, plus simple à vérifier et à tester.
         $requests = BloodRequest::with('hospitalProfile')
             ->active()
-            ->whereIn('blood_type', function ($query) use ($donorType) {
-                // On filtre les types de receveurs pour lesquels ce donneur est compatible
-                $compatibleReceiverTypes = $this->getCompatibleReceiverTypes($donorType);
-                $query->selectRaw('unnest(ARRAY[' .
-                    implode(',', array_fill(0, count($compatibleReceiverTypes), '?')) .
-                    ']::text[])', $compatibleReceiverTypes);
-            })
+            ->whereIn('blood_type', $compatibleReceiverTypes)
             ->orderByRaw("CASE urgency_level WHEN 'critical' THEN 0 WHEN 'urgent' THEN 1 ELSE 2 END")
             ->orderBy('created_at', 'desc')
             ->paginate(20);
